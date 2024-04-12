@@ -1,0 +1,316 @@
+---
+title: "Advanced Bioinformatics 2023 assessment"
+author: "AE23591"
+output: html_document
+---
+
+# General R/Rstudio assessment
+
+3.1 Using the sum() function and : operator, write an expression in the code snippet to evaluate the sum of all integers between 5 and 55.
+```{r}
+result <- sum(5:55) # use the : operator to calculate the integers from 5 to 55; the sum function to sum them up
+print(result) # print the result
+```
+
+3.2. Write a function called sumfun with one input parameter, called n, that calculates the sum of all integers between 5 and n. Use the function to do the calculation for n = 10, n = 20, and n = 100 and present the results.
+```{r}
+sumfun <- function(n) {
+  return(sum(5:n))
+}
+# define the sumfun so that it can sum the integers from 5 to n
+
+result_10 <- sumfun(10)
+result_20 <- sumfun(20)
+result_100 <- sumfun(100)
+# use the function to do specific calculation, when n = 10/20/100
+
+cat("Sum between 5 and 10:", result_10, "\n")
+cat("Sum between 5 and 20:", result_20, "\n")
+cat("Sum between 5 and 100:", result_100, "\n")
+#print the result
+```
+
+3.3. The famous Fibonacci series is calculated as the sum of the two preceding members of the sequence, where the first two steps in the sequence are 1, 1. Write an R script using a for loop to calculate and print out the first 12 entries of the Fibonacci series.
+```{r}
+Fibonacci <- c(1, 1) # give the initial series
+
+for (i in 3:12) {
+  new_entry <- Fibonacci[i - 1] + Fibonacci[i - 2] # calculate the next entry
+  Fibonacci <- c(Fibonacci, new_entry) # append the next entry of the Fibonacci series and here set the range to 12
+}
+
+cat("First 12 entries of the Fibonacci series:\n")
+cat(Fibonacci, sep = ", ")
+```
+
+3.4. With the mtcars dataset bundled with R, use ggplot to generate a box of miles per gallon (in the variable mpg) as a function of the number of gears (in the variable gear). Use the fill aesthetic to colour bars by number of gears.
+```{r}
+data("mtcars")
+library(ggplot2)
+# load the "mtcars" dataset and the ggplot2 package
+
+ggplot(mtcars, aes(x = factor(gear), y = mpg, fill = factor(gear))) +
+  geom_boxplot() +
+  labs(x = "Number of Gears", y = "Miles per Gallon", fill = "Number of Gears") 
+# draw the box plot
+# since gear stands for the number of gears and has the value 3,4,5, here use the factor function to make it as categorical variable
+
+```
+
+3.5. Using the cars dataset and the function lm, fit a linear relationship between speed and breaking distance in the variable distance. What are the fitted slope and intercept of the line, and their standard errors? What are the units used for the variables in the dataset?
+```{r}
+data("cars")
+# load the "cars" dataset 
+
+model <- lm(dist ~ speed, data = cars)
+# use the lm function to do linear regression
+
+summary(model)
+# get the basic statistics of the model
+
+```
+```{r}
+#From the summary data, we can extract the corresponding stats
+slope <- coef(model)[2]  
+intercept <- coef(model)[1]
+slope_se <- summary(model)$coefficients[2, 2]  
+intercept_se <- summary(model)$coefficients[1, 2]
+
+cat("Fitted slope:", slope, "\n")
+cat("Intercept:", intercept, "\n")
+cat("Standard error of slope:", slope_se, "\n")
+cat("Standard error of intercept:", intercept_se, "\n")
+#print them out
+
+```
+```{r}
+data(cars)
+# make sure this chunk can be run separately, load the dataset again
+
+cat("Speed:", attr(cars$speed, "unit"), "\n")
+cat("Distance:", attr(cars$dist, "unit"), "\n")
+# To learn the units for this variables, we can use the attr function, however, the result is null, so we don't know the specific units for this variables in "cars" dataset.
+```
+
+3.6. Use ggplot to plot the data points from 3.5. and the linear fit.
+```{r}
+data(cars)
+library(ggplot2)
+# load the dataset and required package
+
+ggplot(cars, aes(x = speed, y = dist)) +
+  geom_point() +  # plot the data points
+  geom_smooth(method = "lm") + # add the linear fit
+  labs(x = "Speed", y = "Breaking Distance") +  
+  ggtitle("Linear Regression Between Speed and Breaking Distance") +
+  theme(plot.title = element_text(hjust = 0.5)) # make the title in the middle
+
+```
+
+3.7. Again using the cars dataset, now use linear regression (lm) to estimate the average reaction time for the driver to start breaking (in seconds). To simplify matters you may assume that once breaking commences, breaking distance is proportional to the square of the speed. Explain the steps in your analysis. Do you get reasonable results? Finally, use ggplot to plot the data points and the fitted relationship.
+```{r}
+data("cars")
+library(ggplot2)
+# load the dataset and package
+
+# Suppose the reaction time is T, and the breaking distance is D, during T, we assumn the drive is driving at the speed V, and then start breaking, the distance is proportional(p) to V^2
+# In this case, we have the equation: D = T*V + p*(V^2)
+
+cars$squared_speed <- cars$speed^2
+# calculate the squared speed
+
+model <- lm(dist ~ speed + squared_speed, data = cars)
+# linear regression on speed and squared speed
+
+summary(model)
+```
+```{r}
+# From the summary statistical table, we noticed that the p-value of each coefficients is greater than 0.05, which indicate the coefficient is insignificant.
+
+cars$predicted_dist <- predict(model)
+# predict the breaking distance
+
+# plot the data points and the fitted relationship
+ggplot(cars, aes(x = speed, y = dist)) +
+  geom_point() +  # Add data points
+  geom_line(aes(y = predicted_dist), color = "green4") +  # Add fitted relationship
+  labs(x = "Speed", y = "Braking Distance", title = "Fitted Relationship between Breaking Distance and Speed") +  # Set labels and title
+  theme_minimal() 
+```
+
+
+# RNA-seq assessment
+
+3.8. Read in count data and sample description. 
+```{r}
+count_data <- read.csv("D:/ASMHI/7BBG2016/LMS_RNAseq_short-master-2023-final/LMS_RNAseq_short-master-2023-final/course/exercises/data/exercise1_counts.csv", row.names = 1)
+# read in count data
+
+sample_description <- read.table("D:/ASMHI/7BBG2016/LMS_RNAseq_short-master-2023-final/LMS_RNAseq_short-master-2023-final/course/exercises/data/exercise1_sample_description.info",sep = "\t", header = TRUE)
+# read in sample description
+```
+
+3.9. Create col_data and check dimensions.
+```{r}
+col_data <- data.frame(Sample = sample_description$sample,
+                  Group = sample_description$condition,
+                  Batch = sample_description$batch)
+# create the col_data based on sample description
+
+dim(count_data)
+dim(sample_description)
+# check for the dimension
+```
+3.10 Construct DESeqDataSet object using count data and sample description. 
+```{r,eval=TRUE,echo=TRUE}
+library(DESeq2)
+# load DESeq2 library
+
+dds <- DESeqDataSetFromMatrix(countData = count_data, 
+                              colData = col_data, 
+                              design = ~Group)
+# The dimensions are 9, construct DESeq dataset using count data and sample description
+```
+3.11. Perform rlog and VST transformation on the data.
+```{r,eval=TRUE,echo=TRUE}
+dds <- DESeq(dds)
+# apply DESeq normalization first
+
+# perform regularized log transformation and get rld in count format
+rld <- rlog(dds)
+rld_counts <- assay(rld)
+
+# perform Variance Stabilizing Transformation and get vsd in count format
+vst <- varianceStabilizingTransformation(dds)
+vst_counts <- assay(vst)
+```
+3.12. Draw a heatmap of count matrix based on the top 40 highly expressed genes using rlog and VST data.
+```{r,eval=TRUE,echo=TRUE}
+library("pheatmap")
+# load pheatmap library
+
+dds_counts <- counts(dds, normalized = TRUE)
+select <- order(rowMeans(dds_counts), decreasing = TRUE)[1:40]
+# normalize dds counts and get the top 40 highly expressed genes
+```
+
+```{r,eval=TRUE,echo=TRUE}
+library("pheatmap")
+# load pheatmap library
+
+pheatmap(assay(rld)[select, ])
+# draw a heatmap using rlog data
+```
+
+```{r,eval=TRUE,echo=TRUE}
+library("pheatmap")
+# load pheatmap library
+
+pheatmap(assay(vst)[select, ])
+# draw a heatmap using VST data
+```
+
+3.13. Generate a SDM to see the clustering of count data.
+```{r,eval=TRUE,echo=TRUE}   
+library("RColorBrewer")
+# load library
+
+sample_dist <- dist(t(dds_counts))
+# calculate SDM from count data
+
+sdm <- as.matrix(sample_dist)
+# change SDM to matrix form
+
+rownames(sdm) <- dds$Group
+colnames(sdm) <- NULL
+# add row names for clear plot
+
+colors <- colorRampPalette(rev(brewer.pal(9, "Blues")))(255)
+# set the color scheme
+
+pheatmap(sdm,
+         clustering_distance_rows = sample_dist,
+         clustering_distance_cols = sample_dist,
+         col = colors)
+# plot the heatmap of SDM to see the clustering
+```
+3.14. Perform the Principal Component Analysis using rlog method and find out the % significance values of first two principal components.
+```{r,eval=TRUE,echo=TRUE}
+library(ggplot2)
+# load library
+
+plotPCA(rld, intgroup = "Group")
+# perform the PCA using rlog data
+# From the plot we can see the first two principal components explained 70% variance and 13% variance respectively.
+    
+```
+3.15. Repeat the PCA, this time using VST method and compare the plots with the ones obtained using rlog method.
+```{r,eval=TRUE,echo=TRUE}
+library(ggplot2)
+# load library
+
+plotPCA(vst, intgroup = "Group")
+# perform the PCA using vsd data
+# From the plot we can see the first two principal components explained 69% variance and 14% variance respectively.
+# This result is similar with the one obtained using rlog method.
+    
+```
+
+# ChIP-seq assessment
+
+3.16. Read in the two Myc Mel peakset replicates and create the common peakset as we did for our previous exercise. 
+```{r}
+library(ChIPQC)
+firstPeakSet <- ChIPQC:::GetGRanges("D:/ASMHI/7BBG2016/LMS_ChIPseq_short-master-2023-final/LMS_ChIPseq_short-master-2023-final/course/data/MacsPeaks/mycmelrep1_peaks.xls", sep="\t", simple=F)
+secondPeakSet <- ChIPQC:::GetGRanges("D:/ASMHI/7BBG2016/LMS_ChIPseq_short-master-2023-final/LMS_ChIPseq_short-master-2023-final/course/data/MacsPeaks/mycmelrep2_peaks.xls", sep="\t", simple=F)
+# read in the two replicate Myc Mel replicates
+
+```
+
+```{r}
+allPeaks <- c(firstPeakSet,secondPeakSet)
+allPeaksReduced <- reduce(allPeaks)
+# reduce peaksets to single non-overlapping peakset
+length(allPeaks)
+length(allPeaksReduced)
+# check their length
+commonPeaks <- allPeaksReduced[allPeaksReduced %over% firstPeakSet 
+                               & allPeaksReduced %over% secondPeakSet]
+# create the common peakset
+length(commonPeaks)
+# check the length
+```
+3.17. Now we can rank them by their fold enrichment, select the top 500 peaks and resize these peaks to 200bp around centre.
+```r
+library(GenomicRanges)
+
+top_peaks <- commonPeaks[order(-commonPeaks$fold_Enrichment), ][1:500, ]
+# rank peaks by fold enrichment and select top 500 peaks
+
+resized_peaks <- resize(top_peaks, width = 200, fix = "center")
+# resize peaks to 200bp around center
+```
+
+3.18. Extract the sequences underneath the file and write them to FASTA file in you working directory. Inspect the file in notepad.
+```r
+library(BSgenome)
+library(rtracklayer)
+library(BSgenome.Mmusculus.UCSC.mm9)  
+# load the library
+commonPeaksSequences <- getSeq(genome,GRanges(commonPeaks))
+names(commonPeaksSequences) <- paste0("peak_",seqnames(commonPeaks),"_",
+                                         start(commonPeaks),
+                                         "-",
+                                         end(commonPeaks))
+# returns object containing sequences under peaks
+
+writeXStringSet(commonPeaksSequences,file="consensusPeaks.fa")
+# write them to the fasta file
+```
+
+
+
+
+
+
+
